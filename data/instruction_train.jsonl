@@ -1,0 +1,4 @@
+{"instruction": "Qual o sentimento expresso: negative ou positive?", "input": "hot on the hardwood proves once again that a man in drag is not in and of himself funny .", "output": "negative", "source": "sst2"}
+{"instruction": "O texto é positivo ou negativo?", "input": "light-hearted", "output": "positive", "source": "sst2"}
+{"instruction": "Identifique a polaridade do texto: negative ou positive.", "input": "a muddle splashed with bloody beauty as vivid as any scorsese has ever given us .", "output": "positive", "source": "sst2"}
+{"instruction": "Identifique se o texto é sobre World, Sports, Business ou Sci/Tech.", "input": "T. Rex Had Teen Growth Spurt, Scientists Say (Reuters) Reuters - Tyrannosaurus Rex grew incredibly fast\\during a teenaged growth spurt that saw the dinosaur expand its\\bulk by six times, but the fearsome beasts \"lived fast and died\\young,\" researchers said on Wednesday.", "output": "Sci/Tech", "source": "ag_news"}
