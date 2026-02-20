@@ -1,0 +1,186 @@
+================================================================================
+LOG DE EXECUÇÃO - Laboratório Instruction Tuning com GPT-2
+================================================================================
+Data: execução completa (build_instruction_dataset + evaluate_llm_judge)
+Device: CPU
+================================================================================
+
+--- BUILD INSTRUCTION DATASET ---
+
+PS C:\Users\thall\Downloads\Laboratorio-Instruction-Tuning-com-GPT-2> python3 build_instruction_dataset.py
+
+============================================================
+SEÇÃO 1: Carregando datasets (AG News + SST-2)
+============================================================
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+AG News: 1000 | SST-2: 1000 | Total: 2000
+
+============================================================
+SEÇÃO 2: Variações de instrução (estático, sem API)
+============================================================
+Exemplos após variação:
+{
+  "instruction": "Qual a categoria desta notícia? Opções: World, Sports, Business, Sci/Tech.",
+  "input": "Mauritian textile firm cuts jobs One of the oldest textile operators on the Indian Ocean island of Mauritius last week shut seven factories and cut 900 jobs.",
+  "output": "Business",
+  "source": "ag_news"
+}
+---
+{
+  "instruction": "Identifique se o texto é sobre World, Sports, Business ou Sci/Tech.",
+  "input": "Clouds are Cooler than Smoke Clouds help regulate the Earths climate by reflecting sunlight into space, thus cooling the surface. When cloud patterns change, they modify the Earths energy balance in turn, and temperatures on the Earths surface.",
+  "output": "Sci/Tech",
+  "source": "ag_news"
+}
+---
+
+============================================================
+SEÇÃO 3: Curadoria e filtragem
+============================================================
+Antes: 2000 | Depois: 1993
+
+============================================================
+SEÇÃO 4: Normalização
+============================================================
+Exemplos normalizados: 1993
+
+============================================================
+SEÇÃO 5: Split (80/10/10)
+============================================================
+Treino: 1594 | Val: 199 | Teste: 200
+Salvo: data\instruction_train.jsonl
+Salvo: data\instruction_val.jsonl
+Salvo: data\instruction_test.jsonl
+Salvo: data\instruction_dataset.json
+
+Pipeline concluído.
+
+================================================================================
+
+--- EVALUATE LLM JUDGE (Fine-tuning + Avaliação) ---
+
+PS C:\Users\thall\Downloads\Laboratorio-Instruction-Tuning-com-GPT-2> python3 .\evaluate_llm_judge.py
+
+Device: cpu
+Dataset: train=1594, val=199, test=200
+Iniciando fine-tuning...
+
+Treinando: 1594 exemplos, 2 épocas
+
+Ep 1 (Step 00000): Train loss 4.812, Val loss 3.765
+Ep 1 (Step 00005): Train loss 1.883, Val loss 1.975
+Ep 1 (Step 00010): Train loss 1.606, Val loss 1.480
+Ep 1 (Step 00015): Train loss 1.681, Val loss 1.396
+Ep 1 (Step 00020): Train loss 1.664, Val loss 1.366
+Ep 1 (Step 00025): Train loss 1.192, Val loss 1.317
+Ep 1 (Step 00030): Train loss 1.449, Val loss 1.290
+Ep 1 (Step 00035): Train loss 1.465, Val loss 1.274
+Ep 1 (Step 00040): Train loss 1.480, Val loss 1.268
+Ep 1 (Step 00045): Train loss 1.174, Val loss 1.266
+Ep 1 (Step 00050): Train loss 0.737, Val loss 1.260
+Ep 1 (Step 00055): Train loss 1.311, Val loss 1.254
+Ep 1 (Step 00060): Train loss 1.421, Val loss 1.252
+Ep 1 (Step 00065): Train loss 1.555, Val loss 1.249
+Ep 1 (Step 00070): Train loss 1.782, Val loss 1.253
+Ep 1 (Step 00075): Train loss 1.004, Val loss 1.244
+Ep 1 (Step 00080): Train loss 1.595, Val loss 1.246
+Ep 1 (Step 00085): Train loss 1.136, Val loss 1.242
+Ep 1 (Step 00090): Train loss 1.255, Val loss 1.240
+Ep 1 (Step 00095): Train loss 1.524, Val loss 1.234
+Ep 1 (Step 00100): Train loss 1.522, Val loss 1.245
+Ep 1 (Step 00105): Train loss 1.272, Val loss 1.235
+Ep 1 (Step 00110): Train loss 1.310, Val loss 1.230
+Ep 1 (Step 00115): Train loss 1.027, Val loss 1.226
+Ep 1 (Step 00120): Train loss 1.384, Val loss 1.220
+Ep 1 (Step 00125): Train loss 1.673, Val loss 1.220
+Ep 1 (Step 00130): Train loss 1.616, Val loss 1.217
+Ep 1 (Step 00135): Train loss 1.344, Val loss 1.224
+Ep 1 (Step 00140): Train loss 1.338, Val loss 1.217
+Ep 1 (Step 00145): Train loss 1.806, Val loss 1.212
+Ep 1 (Step 00150): Train loss 1.413, Val loss 1.210
+Ep 1 (Step 00155): Train loss 1.168, Val loss 1.209
+Ep 1 (Step 00160): Train loss 1.084, Val loss 1.212
+Ep 1 (Step 00165): Train loss 1.172, Val loss 1.211
+Ep 1 (Step 00170): Train loss 1.376, Val loss 1.213
+Ep 1 (Step 00175): Train loss 1.074, Val loss 1.211
+Ep 1 (Step 00180): Train loss 1.627, Val loss 1.212
+Ep 1 (Step 00185): Train loss 1.201, Val loss 1.213
+Ep 1 (Step 00190): Train loss 1.146, Val loss 1.212
+Ep 1 (Step 00195): Train loss 1.102, Val loss 1.212
+
+Ep 2 (Step 00000): Train loss 1.119, Val loss 1.216
+Ep 2 (Step 00005): Train loss 1.372, Val loss 1.215
+Ep 2 (Step 00010): Train loss 0.779, Val loss 1.219
+Ep 2 (Step 00015): Train loss 0.852, Val loss 1.230
+Ep 2 (Step 00020): Train loss 0.803, Val loss 1.244
+Ep 2 (Step 00025): Train loss 1.106, Val loss 1.253
+Ep 2 (Step 00030): Train loss 0.972, Val loss 1.245
+Ep 2 (Step 00035): Train loss 0.937, Val loss 1.250
+Ep 2 (Step 00040): Train loss 0.668, Val loss 1.253
+Ep 2 (Step 00045): Train loss 0.804, Val loss 1.257
+Ep 2 (Step 00050): Train loss 1.111, Val loss 1.251
+Ep 2 (Step 00055): Train loss 0.874, Val loss 1.241
+Ep 2 (Step 00060): Train loss 0.887, Val loss 1.245
+Ep 2 (Step 00065): Train loss 1.195, Val loss 1.243
+Ep 2 (Step 00070): Train loss 0.746, Val loss 1.237
+Ep 2 (Step 00075): Train loss 0.845, Val loss 1.223
+Ep 2 (Step 00080): Train loss 1.011, Val loss 1.222
+Ep 2 (Step 00085): Train loss 0.824, Val loss 1.218
+Ep 2 (Step 00090): Train loss 0.683, Val loss 1.222
+Ep 2 (Step 00095): Train loss 0.654, Val loss 1.226
+Ep 2 (Step 00100): Train loss 1.012, Val loss 1.218
+Ep 2 (Step 00105): Train loss 1.372, Val loss 1.213
+Ep 2 (Step 00110): Train loss 0.809, Val loss 1.214
+Ep 2 (Step 00115): Train loss 0.945, Val loss 1.214
+Ep 2 (Step 00120): Train loss 0.840, Val loss 1.216
+Ep 2 (Step 00125): Train loss 1.330, Val loss 1.223
+Ep 2 (Step 00130): Train loss 0.834, Val loss 1.230
+Ep 2 (Step 00135): Train loss 0.872, Val loss 1.223
+Ep 2 (Step 00140): Train loss 1.098, Val loss 1.219
+Ep 2 (Step 00145): Train loss 0.900, Val loss 1.217
+Ep 2 (Step 00150): Train loss 1.060, Val loss 1.217
+Ep 2 (Step 00155): Train loss 0.955, Val loss 1.222
+Ep 2 (Step 00160): Train loss 1.037, Val loss 1.216
+Ep 2 (Step 00165): Train loss 1.082, Val loss 1.215
+Ep 2 (Step 00170): Train loss 0.798, Val loss 1.211
+Ep 2 (Step 00175): Train loss 0.963, Val loss 1.216
+Ep 2 (Step 00180): Train loss 1.060, Val loss 1.210
+Ep 2 (Step 00185): Train loss 0.953, Val loss 1.206
+Ep 2 (Step 00190): Train loss 0.880, Val loss 1.208
+Ep 2 (Step 00195): Train loss 0.876, Val loss 1.212
+
+Treino concluído em 136.32 min
+Modelo salvo: gpt2-medium-sft.pth
+
+Gerando respostas: 100%|███████████████████████████████████████████████████████████████████| 20/20 [01:53<00:00,  5.69s/it]
+LLM-as-a-Judge: 100%|██████████████████████████████████████████████████████████████████████| 20/20 [20:32<00:00, 61.62s/it]
+
+=== Resultados LLM-as-a-Judge (n=20) ===
+Vitórias fine-tuned (B): 2 (10.0%)
+Vitórias base (A): 1 (5.0%)
+Empates: 17 (85.0%)
+
+--- Exemplo onde fine-tuned venceu ---
+Instrução: Identifique a polaridade do texto: negative ou positive. ...
+Base: 1
+
+a giant step forward 2
+
+a giant step forward 3
+
+a giant step backward 4
+
+a giant step forward 5
+
+
+Fine-tuned: negative
+Esperado: negative
+
+--- Exemplo onde base venceu ---
+Instrução: Qual a categoria desta notícia? Opções: World, Sports, Business, Sci/Tech. ...
+Base: Fischer is said to have told officials that he would not fight for his wife of 31 years if it meant
+Fine-tuned: Business
+
+================================================================================
+FIM DO LOG
+================================================================================

@@ -7,9 +7,10 @@ Opcional: Ollama rodando (ollama serve + ollama run llama3) para LLM-as-a-Judge
 """
 
 import json
+import re
 import time
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from functools import partial
 
 import torch
@@ -274,6 +275,31 @@ def parse_winner(judge_output: str) -> str:
     return "EMPATE"
 
 
+def parse_scores(judge_output: str) -> Dict[str, Tuple[float, float]]:
+    """
+    Extrai scores (A, B) do output do juiz.
+    Retorna dict com keys: correcao_factual, aderencia, clareza.
+    Cada valor é (score_A, score_B). Retorna None para scores não parseados.
+    """
+    result = {}
+    # Padrões: "Correção factual - A: X, B: Y" ou "Correção factual - A:X, B:Y"
+    patterns = {
+        "correcao_factual": r"[Cc]orre[cç][ãa]o\s*factual\s*[-–:]\s*A\s*:?\s*(\d+(?:\.\d+)?)\s*,\s*B\s*:?\s*(\d+(?:\.\d+)?)",
+        "aderencia": r"[Aa]der[eê]ncia\s*[-–:]\s*A\s*:?\s*(\d+(?:\.\d+)?)\s*,\s*B\s*:?\s*(\d+(?:\.\d+)?)",
+        "clareza": r"[Cc]lareza\s*[-–:]\s*A\s*:?\s*(\d+(?:\.\d+)?)\s*,\s*B\s*:?\s*(\d+(?:\.\d+)?)",
+    }
+    for key, pattern in patterns.items():
+        match = re.search(pattern, judge_output, re.IGNORECASE)
+        if match:
+            try:
+                a_val = float(match.group(1))
+                b_val = float(match.group(2))
+                result[key] = (a_val, b_val)
+            except (ValueError, IndexError):
+                pass
+    return result
+
+
 # ============== Pipeline de Avaliação ==============
 
 def run_evaluation(
@@ -310,9 +336,30 @@ def run_evaluation(
         )
         judge_out = query_ollama(prompt) if use_ollama else "[Ollama não disponível]"
         winner = parse_winner(judge_out)
-        results.append({"entry": entry, "judge_output": judge_out, "winner": winner})
+        scores = parse_scores(judge_out)
+        results.append({
+            "entry": entry,
+            "judge_output": judge_out,
+            "winner": winner,
+            "scores": scores
+        })
 
     return results
+
+
+def compute_score_stats(results: List[Dict]) -> Dict:
+    """Calcula diferença média de scores (B - A) por critério."""
+    stats = {"correcao_factual": [], "aderencia": [], "clareza": []}
+    for r in results:
+        scores = r.get("scores", {})
+        for key in stats:
+            if key in scores:
+                a_val, b_val = scores[key]
+                stats[key].append(b_val - a_val)  # positivo = fine-tuned melhor
+    return {
+        k: (sum(v) / len(v), len(v)) if v else (None, 0)
+        for k, v in stats.items()
+    }
 
 
 def print_results(results: List[Dict]):
@@ -326,6 +373,16 @@ def print_results(results: List[Dict]):
     print(f"Vitórias fine-tuned (B): {wins_finetuned} ({100 * wins_finetuned / n:.1f}%)")
     print(f"Vitórias base (A): {wins_base} ({100 * wins_base / n:.1f}%)")
     print(f"Empates: {ties} ({100 * ties / n:.1f}%)")
+
+    # Diferença média de scores (B - A; positivo = fine-tuned melhor)
+    score_stats = compute_score_stats(results)
+    print("\n--- Diferença média de scores (B - A, positivo = fine-tuned melhor) ---")
+    for key, (diff, count) in score_stats.items():
+        label = {"correcao_factual": "Correção factual", "aderencia": "Aderência", "clareza": "Clareza"}[key]
+        if diff is not None:
+            print(f"  {label}: {diff:+.2f} (n={count})")
+        else:
+            print(f"  {label}: (não parseado)")
 
     print("\n--- Exemplo onde fine-tuned venceu ---")
     for r in results:
@@ -396,4 +453,16 @@ def main(
 
 
 if __name__ == "__main__":
-    main(skip_training=False, n_test=20)
+    import argparse
+    parser = argparse.ArgumentParser(description="Fine-tune GPT-2 e avaliar com LLM-as-a-Judge")
+    parser.add_argument("--skip-train", action="store_true", help="Pular treino (usar modelo existente, só avaliação)")
+    parser.add_argument("--n-test", type=int, default=20, help="Número de exemplos para avaliação (default: 20)")
+    parser.add_argument("--data-dir", type=str, default="data", help="Diretório do dataset (default: data)")
+    parser.add_argument("--model", type=str, default="gpt2-medium-sft.pth", help="Caminho do modelo fine-tuned")
+    args = parser.parse_args()
+    main(
+        data_dir=args.data_dir,
+        model_path=args.model,
+        skip_training=args.skip_train,
+        n_test=args.n_test,
+    )

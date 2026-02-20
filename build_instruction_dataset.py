@@ -168,7 +168,6 @@ def generate_instruction_variations_static(data: List[Dict]) -> List[Dict]:
     return result
 
 
-# ============== Filtragem e Curadoria ==============
 
 def filter_vague_instructions(data: List[Dict]) -> List[Dict]:
     """Remove instruções vagas (muito curtas ou genéricas)."""
@@ -189,14 +188,19 @@ def filter_vague_instructions(data: List[Dict]) -> List[Dict]:
     return filtered
 
 
-def filter_label_leakage(data: List[Dict], tasks: List[str] = None) -> List[Dict]:
-    """Remove exemplos onde o rótulo aparece no input (vazamento)."""
+def filter_label_leakage(data: List[Dict], tasks: List[str] = None, min_input_len: int = 30) -> List[Dict]:
+    """
+    Remove exemplos onde o rótulo aparece no input de forma suspeita (vazamento).
+    Só remove quando o input é muito curto (< min_input_len chars) E contém o rótulo.
+    Em textos longos, o rótulo pode aparecer naturalmente (ex: 'business' em notícia de negócios).
+    """
     tasks = tasks or ["ag_news", "sst2"]
     filtered = []
     for entry in data:
         output = entry.get("output", "").strip()
         input_text = entry.get("input", "").lower()
-        if output.lower() in input_text and len(output) > 3:
+        # Só remove se input curto E rótulo presente (vazamento óbvio)
+        if len(input_text) < min_input_len and output.lower() in input_text and len(output) > 3:
             continue
         filtered.append(entry)
     return filtered
@@ -230,9 +234,12 @@ def find_duplicate_indices(data: List[Dict], key: str = "input", threshold: floa
     return to_remove
 
 
-def filter_duplicates(data: List[Dict], keys: List[str] = None, threshold: float = 0.9) -> List[Dict]:
-    """Remove duplicatas e near-duplicatas."""
-    keys = keys or ["instruction", "input"]
+def filter_duplicates(data: List[Dict], keys: List[str] = None, threshold: float = 0.98) -> List[Dict]:
+    """
+    Remove duplicatas e near-duplicatas.
+    Usa apenas 'input' por padrão: muitos exemplos compartilham a mesma instrução por design.
+    """
+    keys = keys or ["input"]
     all_to_remove = set()
 
     for key in keys:
@@ -258,9 +265,9 @@ def apply_curation_pipeline(data: List[Dict], tasks: List[str] = None) -> List[D
     """Aplica toda a curadoria e filtragem."""
     tasks = tasks or ["ag_news", "sst2"]
     data = filter_vague_instructions(data)
-    data = filter_label_leakage(data, tasks)
+    data = filter_label_leakage(data, tasks, min_input_len=30)
     data = filter_inconsistent(data, tasks)
-    data = filter_duplicates(data, threshold=0.92)
+    data = filter_duplicates(data, keys=["input"], threshold=0.98)
     return data
 
 
@@ -397,4 +404,9 @@ def main(max_per_dataset: int = 1000, output_dir: str = "data", seed: int = 42):
 
 
 if __name__ == "__main__":
-    main(max_per_dataset=1000)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max", type=int, default=1000, help="Max exemplos por dataset")
+    parser.add_argument("--output", type=str, default="data", help="Diretório de saída")
+    args = parser.parse_args()
+    main(max_per_dataset=args.max, output_dir=args.output)

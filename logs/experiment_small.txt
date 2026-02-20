@@ -1,0 +1,13 @@
+=== EXPERIMENTO DATASET PEQUENO ===
+
+Config: max_per_dataset=200, output_dir=data_small
+
+--- Resultados LLM-as-a-Judge ---
+Vitórias fine-tuned (B): 4 (20.0%)
+Vitórias base (A): 0 (0.0%)
+Empates: 16 (80.0%)
+
+Diferença média de scores (B - A):
+  Correção factual: +2.00 (n=1)
+  Aderência: +4.00 (n=1)
+  Clareza: +2.00 (n=1)
